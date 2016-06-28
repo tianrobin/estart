@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+       default-autowire="byName">
+
+    <!-- 加载资源文件 其中包含变量信息，必须在Spring配置文件的最前面加载，即第一个加载 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <!-- 配置事务异常封装 -->
+    <bean id="persistenceExceptionTranslationPostProcessor"
+          class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+    <!-- 自动装配注解Bean后置处理器 -->
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+    <!-- JPA注解Bean后置处理器 -->
+    <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
+    <!-- entityManagerFactory -->
+    <bean id="entityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan">
+            <list>
+                <!-- 可以加多个包 -->
+                <value>com.custom.modle</value>
+            </list>
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+                <prop key="hibernate.current_session_context_class">${hibernate.current_session_context_class}</prop>
+                <prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+                <prop key="javax.persistence.validation.mode">none</prop>
+                <!--<prop key="hibernate.query.substitutions">${hibernate.query.substitutions}</prop>-->
+                <!--<prop key="hibernate.default_batch_fetch_size">${hibernate.default_batch_fetch_size}</prop>-->
+                <!--<prop key="hibernate.max_fetch_depth">${hibernate.max_fetch_depth}</prop>-->
+                <!--<prop key="hibernate.generate_statistics">${hibernate.generate_statistics}</prop>-->
+                <!--<prop key="hibernate.bytecode.use_reflection_optimizer">${hibernate.bytecode.use_reflection_optimizer}</prop>-->
+                <prop key="hibernate.enable_lazy_load_no_trans">${hibernate.enable_lazy_load_no_trans}</prop>
+                <prop key="c3p0.acquire_increment">1</prop>
+                <prop key="c3p0.idle_test_period">0</prop> <!-- seconds -->
+                <prop key="c3p0.max_size">5</prop>
+                <prop key="c3p0.max_statements">0</prop>
+                <prop key="c3p0.min_size">2</prop>
+                <prop key="c3p0.timeout">90</prop><!-- seconds -->
+                <prop key="c3p0.removeAbandoned">true</prop>
+            </props>
+        </property>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <property name="databasePlatform" value="org.hibernate.dialect.MySQLDialect"/>
+                <!--<property name="database" value="MYSQL"/>-->
+                <!--<property name="showSql" value="true"/>-->
+                <!-- <property name="generateDdl" value="true" /> -->
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 数据库映射 -->
+    <bean id="dataSource"
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.pass}"/>
+    </bean>
+
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager"
+          class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory">
+            <ref bean="entityManagerFactory"/>
+        </property>
+    </bean>
+
+
+    <!-- Spring Data Jpa配置 -->
+    <!--    -->
+
+    <!--<jpa:repositories base-package="com.custom"  transaction-manager-ref="transactionManager" entity-manager-factory-ref="entityManagerFactory"/>-->
+
+    <!-- 使用annotation定义事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+
+    <!-- 初始化数据表结构 与默认数据-->
+    <!--<jdbc:initialize-database data-source="dataSource" ignore-failures="ALL">-->
+        <!--<jdbc:script location="classpath:sql/h2/schema.sql"/>-->
+        <!--<jdbc:script location="classpath:data/import-data.sql" encoding="UTF-8"/>-->
+    <!--</jdbc:initialize-database>-->
+
+
+    <!-- 直接使用Spring的 JpaTemplate -->
+    <!--<bean id="jpaTemplate" class="org.springframework.orm.jpa.">-->
+    <!--<property name="entityManagerFactory" ref="entityManagerFactory"/>-->
+    <!--</bean>-->
+    <!--<bean id="hibernateTemplate" class="org.springframework.orm.hibernate5.HibernateTemplate">-->
+    <!--<property name="sessionFactory" ref="sessionFactory"/>-->
+    <!--</bean>-->
+
+
+    <!--摒弃如下配置原因有如下两种：-->
+    <!--1.方法名不许再下面做匹配在可以织入事物操作-->
+    <!--2.aop的切面execution(* com.custom.service..*.*(..) 不灵活，不支持子目录-->
+    <!--&lt;!&ndash; 配置事务的传播特性 &ndash;&gt;-->
+    <!--<tx:advice id="txAdvice" transaction-manager="transactionManager">-->
+    <!--<tx:attributes>-->
+    <!--<tx:method name="add*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="save*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="create*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="del*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="modify*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="*" read-only="false"/>-->
+    <!--</tx:attributes>-->
+    <!--</tx:advice>-->
+
+    <!--&lt;!&ndash; 那些类的哪些方法参与事务 &ndash;&gt;-->
+    <!--<aop:config>-->
+    <!--<aop:pointcut id="allManagerMethod" expression="execution(* com.custom.service..*.*(..))"/>-->
+    <!--<aop:advisor pointcut-ref="allManagerMethod" advice-ref="txAdvice"/>-->
+    <!--<aop:pointcut id="subPackageMethod" expression="execution(* com.custom.service.*.*.*(..))"/>-->
+    <!--<aop:advisor pointcut-ref="subPackageMethod" advice-ref="txAdvice"/>-->
+    <!--</aop:config>-->
+</beans>
