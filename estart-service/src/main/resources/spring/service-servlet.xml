@@ -13,7 +13,7 @@
     <mvc:annotation-driven/>
 
     <!-- ①：对web包中的所有类进行扫描，以完成Bean创建和自动依赖注入的功能 -->
-    <context:component-scan base-package="com.custom"/>
+    <context:component-scan base-package="com.estart.start"/>
     <!--<bean class="com.custom.app.web.exception.AppWebExceptionResolver"/>-->
 
     <mvc:default-servlet-handler/>
@@ -32,7 +32,7 @@
           class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
         <property name="resourceLoaderPath" value="WEB-INF/templates/"/>
         <property name="configLocation">
-            <value>/WEB-INF/config/velocity.properties</value>
+            <value>classpath:/velocity.properties</value>
         </property>
     </bean>
 
@@ -70,14 +70,6 @@
             </bean>
         </property>
     </bean>
-    <bean id="xmlViewResolver"
-          class="org.springframework.web.servlet.view.xml.MarshallingView">
-        <property name="marshaller">
-            <bean class="org.springframework.oxm.castor.CastorMarshaller">
-                <property name="validating" value="false"></property>
-            </bean>
-        </property>
-    </bean>
 
     <!-- <bean id="sessionInterceptor" class="com.lsqiche.interceptor.SessionInterceptor"/> -->
 
@@ -92,7 +84,6 @@
             <map>
                 <entry key="htm" value="text/html"/>
                 <entry key="json" value="application/json"/>
-                <entry key="xml" value="application/xml"/>
             </map>
         </property>
     </bean>
@@ -108,8 +99,6 @@
             <list>
                 <!-- for application/json -->
                 <ref bean="jsonViewResolver"/>
-                <!-- for application/xml -->
-                <ref bean="xmlViewResolver"/>
             </list>
         </property>
     </bean>

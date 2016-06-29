@@ -47,7 +47,7 @@
         <logger name="org.jboss.netty" level="warn"/>
         <logger name="org.apache.http" level="warn"/>
         <logger name="com.mchange.v2" level="warn"/>
-        <logger name="com.custom" level="debug"/>
+        <logger name="com.estart" level="debug"/>
         <!-- Root Logger -->
         <root level="DEBUG">
             <!--<appender-ref ref="info_appender"/>-->
